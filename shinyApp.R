@@ -43,7 +43,6 @@ createPlotByStateShiny <- function(df, num_quantis = 7, year) {
   return(p)
 } 
 
-# Define UI
 ui <- fluidPage(
   tags$head(
     tags$style(HTML("
@@ -65,27 +64,23 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       sliderInput("yearSlider", "Select Year:",
-                  min = 2000, max = 2020, value = 2000, step = 1),
+                  min = 2010, max = 2021, value = 2010, step = 1),
       textOutput("yearText")
     ),
     mainPanel(
-      leafletOutput("leafletMap", width = "1000px", height = "1000px")  # Full width, fixed height
+      leafletOutput("leafletMap", width = "1000px", height = "1000px") 
     )
   )
 )
 
-# Define server logic
 server <- function(input, output) {
-  # Render the leaflet map
   output$leafletMap <- renderLeaflet({
-    createPlotByStateShiny(df_mun_inteiro, num_quantis = 5, input$yearSlider)  # Use the selected year from the slider
+    createPlotByStateShiny(df_populacao, num_quantis = 7, input$yearSlider)  
   })
   
-  # Display the current year
   output$yearText <- renderText({
     paste("Current Year:", input$yearSlider)
   })
 }
 
-# Run the application
 shinyApp(ui = ui, server = server)

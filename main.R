@@ -6,24 +6,18 @@ if (!dir.exists(paths)) {
 }
 
 source('./utils_est_espacial.R')
-cat(sprintf("At:"), getwd())
+cat(sprintf("Em:"), getwd())
 
-df_mun001 <- main(ano = 2001)
-df_mun001$Year = 2001
-df_mun002 <- main(ano = 2002)
-df_mun002$Year = 2002
-df_mun003 <- main(ano = 2003)
-df_mun003$Year = 2003
-df_mun004 <- main(ano = 2004)
-df_mun004$Year = 2004
-df_mun005 <- main(ano = 2005)
-df_mun005$Year = 2005
-df_mun006 <- main(ano = 2006)
-df_mun006$Year = 2006
+df_populacao = data.frame()
+for (i in 2010:2021) {
+  print(i)
+  df_tmp = main(ano = i)
+  df_tmp$Year = i
+  df_populacao <- rbind(df_populacao, 
+                        df_tmp) 
+}
 
-df_mun_inteiro <- rbind(df_mun001,
-                        df_mun002,
-                        df_mun003,
-                        df_mun004,
-                        df_mun005,
-                        df_mun006)
+#####
+# banco do PIB foi pego por aqui:
+# https://ftp.ibge.gov.br/Pib_Municipios/2021/base/base_de_dados_2010_2021_xlsx.zip
+
