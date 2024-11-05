@@ -36,6 +36,7 @@ cache/
 *.xls
 *.json
 *.html
+*.xlsx
 
 # Renv and Packrat
 renv/library/
