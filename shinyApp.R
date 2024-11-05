@@ -63,19 +63,32 @@ ui <- fluidPage(
   titlePanel("Shiny App with Year Slider and Leaflet Map"),
   sidebarLayout(
     sidebarPanel(
-      sliderInput("yearSlider", "Select Year:",
-                  min = 2010, max = 2021, value = 2010, step = 1),
-      textOutput("yearText")
+      selectInput("ano", "Selecione o Ano:", choices = 2010:2021, selected = 2010),
+      
+      # Radio buttons para três opções
+      radioButtons("opcoes", "Escolha uma Opção:",
+                   choices = c("População", "PIB", "PIB per capita")),
+      
+      # Botão de ação para confirmar a seleção
+      actionButton("Acao", "Confirmar Seleção")
+      
     ),
     mainPanel(
-      leafletOutput("leafletMap", width = "1000px", height = "1000px") 
+      leafletOutput("leafletMap", width = "70%", height = "1000px"),
     )
   )
 )
 
 server <- function(input, output) {
-  output$leafletMap <- renderLeaflet({
-    createPlotByStateShiny(df_populacao, num_quantis = 7, input$yearSlider)  
+  
+  observeEvent(input$Acao, {
+    output$leafletMap <- renderLeaflet({
+      switch(input$opcoes,
+             "População" = createPlotByStateShiny(df_populacao, num_quantis = 2, input$ano),
+             "PIB" = createPlotByStateShiny(df_populacao, num_quantis = 7, input$ano),
+             "PIB per capita" = createPlotByStateShiny(df_populacao, num_quantis = 10, input$ano)
+      )
+    })
   })
   
   output$yearText <- renderText({

@@ -2,6 +2,7 @@
   # install.packages("devtools")
   # devtools::install_github("tbrugz/ribge")
 
+library(readxl)
 library(httr)
 library(sf)
 library(ribge)
