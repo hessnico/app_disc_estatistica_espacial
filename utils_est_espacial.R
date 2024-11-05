@@ -7,10 +7,16 @@ library(httr)
 library(sf)
 library(ribge)
 library(dplyr)
-library(leaflet)
 library(viridis)
 library(ggplot2)
 library(geojsonio)
+
+library(shiny)
+library(leaflet)
+library(glue)
+
+initial_lat = -29.331089
+initial_long = -53.08744052154482
 
 printEstadosBrasileirosFull <- function() {
   
@@ -164,12 +170,77 @@ getMap <- function(url, estado) {
 
 printEstadosBrasileiros()
 
-main <- function(ano) {
+limpaBancoPIB <- function(ano) {
+  
+  df_pib_cru <- read_excel('./PIB dos Municípios - base de dados 2010-2021.xlsx')
+  df_pib_rs <- df_pib_cru %>% filter(`Sigla da Unidade da Federação` == "RS")
+  rm(df_pib_cru)
+  
+  colnames(df_pib_rs)[39] = "PIB"
+  colnames(df_pib_rs)[40] = "PIB_per_capita"
+  colnames(df_pib_rs)[8] = "nome_municipio"
+  df_pib_rs$`Código do Município` = as.character(df_pib_rs$`Código do Município`)
+  
+  
+  df_pib_rs_limpo <- df_pib_rs %>% select(
+    `Código do Município`,
+    `Ano`,
+    `nome_municipio`,
+    `Nome da Mesorregião`,
+    `Hierarquia Urbana`,
+    `PIB`,
+    `PIB_per_capita`,
+    `Atividade com maior valor adicionado bruto`
+  )
+  
+  df_pib_rs_retorno <- df_pib_rs_limpo %>% filter(Ano == ano)
+  return(df_pib_rs_retorno)
+}
+
+createPlotByStateShiny <- function(df, num_quantis = 7, year) {
+  
+  df = df %>% filter(Year == year)
+  num_quantis = num_quantis / (num_quantis*num_quantis)
+  df <- df %>%
+    mutate(quantis = cut(populacao, breaks = quantile(populacao, probs = seq(0, 1, by = num_quantis), na.rm = TRUE), include.lowest = TRUE))
+  
+  pal <- colorFactor(palette = "RdYlBu", domain = df$quantis)
+  
+  nome_dos_municipios = df$nome_munic
+  populacao = df$populacao
+  
+  p <- leaflet(df) %>%
+    addTiles() %>%
+    setView(lat =  initial_lat, lng = initial_long, zoom = 7) %>% 
+    addPolygons(
+      fillColor = ~pal(quantis),
+      weight = 2,
+      opacity = 1,
+      color = 'white',
+      dashArray = '3',
+      fillOpacity = 0.7,
+      highlightOptions = highlightOptions(
+        weight = 5,
+        color = "#666",
+        dashArray = "",
+        fillOpacity = 0.7,
+        bringToFront = TRUE
+      ),
+      label = ~paste(nome_dos_municipios, "População:", populacao),
+      labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto")
+    ) %>%
+    addLegend(pal = pal, values = ~quantis, opacity = 0.7, title = "População em Quantis", position = "bottomright")
+  
+  return(p)
+} 
+
+criaBanco <- function(ano) {
   
   estado = "RS"
+  glue("\nEstado setado para: {estado}\n")
   
   estadosFull <- printEstadosBrasileirosFull()
-  printEstado <- sprintf("Gerando para %s", toupper(estadosFull[[estado]]))
+  printEstado <- sprintf("\n\nGerando para %s\n", toupper(estadosFull[[estado]]))
   sprintf(printEstado)
   
   # URL da API para a malha do estado de qualquer estado brasileiro
@@ -179,33 +250,41 @@ main <- function(ano) {
   jsonPath <- getMap(url, estado)
   
   print("...")
-  print("Transformando JSON para SF...")
+  print("    Transformando JSON para SF...")
   topo_data <- geojson_read(jsonPath, what = "sp")  # "sp" lê como objeto Spatial
   df_mun <- st_as_sf(topo_data)
   rm(topo_data)
   
   print("...")
-  print("Recuperando dados da população de cada município...")
+  print("    Recuperando dados da população de cada município...")
   pop2022 <- populacao_municipios(ano)
   pop <- pop2022 |> filter(uf == estado)
   rm(pop2022)
   
   paste(
-    cat("Os bancos de dados possuem o mesmo tamanho?  "),
+    cat("    Os bancos de dados possuem o mesmo tamanho?  "),
     cat(dim(pop |> unique())[1] == dim(pop)[1])
   )
   
   pop <- pop |> 
     mutate(CD_MUN = as.character(cod_municipio))
   
-  cat("\n\nFazendo o full join no banco")
+  cat("    Fazendo o full join no banco")
   df_mun <- df_mun |>
     full_join(pop, by = c("codarea" = "CD_MUN"))
   
+  df_pib <- limpaBancoPIB(ano = ano)
+  df_mun_pib <- df_mun |>
+    inner_join(df_pib, by = c("codarea" = "Código do Município"))
+  
+  
+  glue("    Banco PIB tamanho: {dim(df_pib)}\n    Banco do retorno: {dim(df_mun_pib)}")
+  
   rm(pop)
+  rm(df_pib)
   
-  cat("Criando o plot...")
-  createPlotByState(df_mun, num_quantis = 6)
+  # cat("Criando o plot...")
+  # createPlotByState(df_mun, num_quantis = 6)
   
-  return(df_mun)
+  return(df_mun_pib)
 }
