@@ -10,10 +10,12 @@ library(dplyr)
 library(viridis)
 library(ggplot2)
 library(geojsonio)
-
+library(scales)
 library(shiny)
 library(leaflet)
 library(glue)
+library(shinydashboard)
+options(scipen = 999)
 
 initial_lat = -29.331089
 initial_long = -53.08744052154482
@@ -94,7 +96,6 @@ printEstadosBrasileiros <- function() {
 }
 
 ## ggplot graph
-
 createBasicGGplot <- function(df, num_quantis = 5) {
 
   num_quantis = num_quantis / (num_quantis*num_quantis)
@@ -143,7 +144,7 @@ createPlotByState <- function(df, num_quantis = 10) {
         fillOpacity = 0.7,
         bringToFront = TRUE
       ),
-      label = ~paste(nome_dos_municipios, "População:", populacao),
+      label = ~paste(nome_dos_municipios, "População:", populacao_formatada),
       labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto")
     ) %>%
     addLegend(pal = pal, values = ~quantis, opacity = 0.7, title = "População em Quantis", position = "bottomright")
@@ -182,7 +183,7 @@ limpaBancoPIB <- function(ano) {
   df_pib_rs$`Código do Município` = as.character(df_pib_rs$`Código do Município`)
   
   
-  df_pib_rs_limpo <- df_pib_rs %>% select(
+  df_pib_rs_limpo <- df_pib_rs %>% dplyr::select(
     `Código do Município`,
     `Ano`,
     `nome_municipio`,
@@ -202,7 +203,10 @@ createPlotByStateShiny <- function(df, num_quantis = 7, year) {
   df = df %>% filter(Year == year)
   num_quantis = num_quantis / (num_quantis*num_quantis)
   df <- df %>%
-    mutate(quantis = cut(populacao, breaks = quantile(populacao, probs = seq(0, 1, by = num_quantis), na.rm = TRUE), include.lowest = TRUE))
+    mutate(quantis = cut(populacao,
+                         breaks = round(quantile(populacao, probs = seq(0, 1, by = num_quantis), na.rm = TRUE),2), 
+                         include.lowest = TRUE,
+                         dig.lab = 15))
   
   pal <- colorFactor(palette = "RdYlBu", domain = df$quantis)
   
@@ -226,7 +230,7 @@ createPlotByStateShiny <- function(df, num_quantis = 7, year) {
         fillOpacity = 0.7,
         bringToFront = TRUE
       ),
-      label = ~paste(nome_dos_municipios, "\nPopulação:", populacao),
+      label = ~paste(nome_dos_municipios, "\nPopulação:", populacao_formatada),
       labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto")
     ) %>%
     addLegend(pal = pal, values = ~quantis, opacity = 0.7, title = "População em Quantis", position = "bottomright")
@@ -291,27 +295,58 @@ criaBanco <- function(ano) {
 
 
 
+######################################################################
+# Hierarquia
 
-
-
-
-
-
-
+createPlotByStateShiny_hierarquia <- function(df, year) {
+  
+  df = df %>% filter(Year == year)
+  
+  pal <- colorFactor(palette = "RdYlBu", domain = df$`Hierarquia Urbana`)
+  
+  nome_dos_municipios = df$nome_munic
+  hierarquia = df$`Hierarquia Urbana`
+  
+  p <- leaflet(df) %>%
+    addTiles() %>%
+    setView(lat =  initial_lat, lng = initial_long, zoom = 7) %>% 
+    addPolygons(
+      fillColor = ~pal(hierarquia),
+      weight = 2,
+      opacity = 1,
+      color = 'white',
+      dashArray = '3',
+      fillOpacity = 0.7,
+      highlightOptions = highlightOptions(
+        weight = 5,
+        color = "#666",
+        dashArray = "",
+        fillOpacity = 0.7,
+        bringToFront = TRUE
+      ),
+      label = ~paste(nome_dos_municipios, "Hierarquia:", hierarquia),
+      labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto")
+    ) %>%
+    addLegend(pal = pal, 
+              values = ~hierarquia, 
+              opacity = 0.7, title = "Hierarquia", position = "bottomright")
+  
+  return(p)
+}
 
 
 ######################################################################
 # PIB
-
-
-
 
 leaf_pib <- function(df, num_quantis = 7, year) {
   
   df = df %>% filter(Year == year)
   num_quantis = num_quantis / (num_quantis*num_quantis)
   df <- df %>%
-    mutate(quantis = cut(PIB, breaks = quantile(PIB, probs = seq(0, 1, by = num_quantis), na.rm = TRUE), include.lowest = TRUE))
+    mutate(quantis = cut(PIB,
+                         breaks = round(quantile(PIB, probs = seq(0, 1, by = num_quantis), na.rm = TRUE),2), 
+                         include.lowest = TRUE,
+                         dig.lab = 15))
   
   pal <- colorFactor(palette = "RdYlBu", domain = df$quantis)
   
@@ -335,10 +370,15 @@ leaf_pib <- function(df, num_quantis = 7, year) {
         fillOpacity = 0.7,
         bringToFront = TRUE
       ),
-      label = ~paste(nome_dos_municipios, "\nPIB (R$):", PIB),
+      label = ~paste(nome_dos_municipios, "\nPIB:", PIB_notacao_real),
       labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto")
     ) %>%
-    addLegend(pal = pal, values = ~quantis, opacity = 0.7, title = "PIB (R$) em Quantis", position = "bottomright")
+    addLegend(pal = pal,
+              values = ~quantis,
+              opacity = 0.7,
+              title = "PIB (R$) em Quantis",
+              position = "bottomright",
+            )
   
   return(p)
 } 
@@ -348,7 +388,10 @@ leaf_pib_capita <- function(df, num_quantis = 7, year) {
   df = df %>% filter(Year == year)
   num_quantis = num_quantis / (num_quantis*num_quantis)
   df <- df %>%
-    mutate(quantis = cut(PIB_per_capita, breaks = quantile(PIB_per_capita, probs = seq(0, 1, by = num_quantis), na.rm = TRUE), include.lowest = TRUE))
+    mutate(quantis = cut(PIB_per_capita,
+                         breaks = round(quantile(PIB_per_capita, probs = seq(0, 1, by = num_quantis), na.rm = TRUE),2), 
+                         include.lowest = TRUE,
+                         dig.lab = 15))
   
   pal <- colorFactor(palette = "RdYlBu", domain = df$quantis)
   
@@ -372,10 +415,48 @@ leaf_pib_capita <- function(df, num_quantis = 7, year) {
         fillOpacity = 0.7,
         bringToFront = TRUE
       ),
-      label = ~paste(nome_dos_municipios, "\nPIB per capita (R$):", PIB_per_capita),
+      label = ~paste(nome_dos_municipios, "\nPIB per capita:", PIB_per_capita_notacao_real),
       labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto")
     ) %>%
     addLegend(pal = pal, values = ~quantis, opacity = 0.7, title = "PIB per capita (R$) em Quantis", position = "bottomright")
   
   return(p)
 } 
+
+leaf_meso <- function(df, year) {
+  
+  df <- df %>% filter(Year == year)
+  pal <- colorFactor(palette = "RdYlBu", domain = df$`Nome da Mesorregião`)
+  
+  nome_dos_municipios <- df$nome_munic
+  meso <- df$`Nome da Mesorregião`
+  
+  p <- leaflet(df) %>%
+    addTiles() %>%
+    setView(lat = initial_lat, lng = initial_long, zoom = 7) %>% 
+    addPolygons(
+      weight = 2,
+      opacity = 1,
+      color = 'white',
+      dashArray = '3',
+      fillOpacity = 0.7,
+      fillColor = ~pal(meso),
+      highlightOptions = highlightOptions(
+        weight = 5,
+        color = "#666",
+        dashArray = "",
+        fillOpacity = 0.7,
+        bringToFront = TRUE
+      ),
+      label = ~paste(nome_dos_municipios, "\nMesorregiao", meso),
+      labelOptions = labelOptions(
+        style = list("font-weight" = "normal", padding = "3px 8px"),
+        textsize = "15px",
+        direction = "auto"
+      )
+    ) %>%
+    addLegend(pal = pal, values = ~meso, opacity = 0.7, title = "Mesorregião", position = "bottomright")
+  
+  return(p)
+} 
+
