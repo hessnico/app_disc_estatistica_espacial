@@ -40,11 +40,11 @@ server <- function(input, output) {
   observeEvent(input$Acao, {
     output$leafletMap <- renderLeaflet({
       switch(input$opcoes,
-             "População" = createPlotByStateShiny(df_populacao, num_quantis = input$num_quantis, input$ano),
-             "PIB" = leaf_pib(df_populacao, num_quantis = input$num_quantis, input$ano),
-             "PIB per capita" = leaf_pib_capita(df_populacao, num_quantis = input$num_quantis, input$ano),
-             "Mesorregião" = leaf_meso(df_populacao, input$ano),
-             "Hierarquia Urbana" = createPlotByStateShiny_hierarquia(df = df_populacao, year = input$ano)
+             "População" = createPlotByStateShiny(df_app, num_quantis = input$num_quantis, input$ano),
+             "PIB" = leaf_pib(df_app, num_quantis = input$num_quantis, input$ano),
+             "PIB per capita" = leaf_pib_capita(df_app, num_quantis = input$num_quantis, input$ano),
+             "Mesorregião" = leaf_meso(df_app, input$ano),
+             "Hierarquia Urbana" = createPlotByStateShiny_hierarquia(df = df_app, year = input$ano)
       )
     })
   })
