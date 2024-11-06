@@ -69,3 +69,6 @@ packrat/.cache/
 *.atx
 *.cpg
 *.qix
+
+#### config password 
+config.R
