@@ -1,4 +1,4 @@
-
+source('./utils_est_espacial.R')
 
 ui <- fluidPage(
   tags$head(
@@ -25,8 +25,15 @@ ui <- fluidPage(
       selectInput("ano", "Selecione o Ano:", choices = 2010:2021, selected = 2010),
       
       # Radio buttons para três opções
-      radioButtons("opcoes", "Escolha uma Opção de gráficos:",
+      radioButtons("opcoes", "Escolha uma opção de gráfico:",
                    choices = c("População", "PIB", "PIB per capita")),
+      
+      
+      sliderInput("num_quantis", 
+                  "Escolha o número de quantis para os gráficos:", 
+                  min = 1, 
+                  max = 10, 
+                  value = 6),
       
       # Botão de ação para confirmar a seleção
       actionButton("Acao", "Confirmar Seleção")
@@ -39,13 +46,14 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
+
   
   observeEvent(input$Acao, {
     output$leafletMap <- renderLeaflet({
       switch(input$opcoes,
-             "População" = createPlotByStateShiny(df_populacao, num_quantis = 2, input$ano),
-             "PIB" = createPlotByStateShiny(df_populacao, num_quantis = 7, input$ano),
-             "PIB per capita" = createPlotByStateShiny(df_populacao, num_quantis = 10, input$ano)
+             "População" = createPlotByStateShiny(df_populacao, num_quantis = input$num_quantis, input$ano),
+             "PIB" = leaf_pib(df_populacao, num_quantis = input$num_quantis, input$ano),
+             "PIB per capita" = leaf_pib_capita(df_populacao, num_quantis = input$num_quantis, input$ano),
       )
     })
   })
