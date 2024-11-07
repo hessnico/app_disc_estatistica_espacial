@@ -1,5 +1,4 @@
-
-source('./utils_est_espacial.R')
+df_app <- df_populacao
 
 ui <- dashboardPage(
   dashboardHeader(title = "Shiny Estatística Espacial"),
@@ -48,7 +47,4 @@ server <- function(input, output) {
       )
     })
   })
-  
 }
-
-shinyApp(ui = ui, server = server)

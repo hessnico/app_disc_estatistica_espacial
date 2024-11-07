@@ -17,8 +17,6 @@ library(glue)
 library(shinydashboard)
 options(scipen = 999)
 
-df_app <- load('./appDataRS.RData')
-
 initial_lat = -29.331089
 initial_long = -53.08744052154482
 
