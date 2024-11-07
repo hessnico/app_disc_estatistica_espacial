@@ -5,7 +5,7 @@
 library(readxl)
 library(httr)
 library(sf)
-library(ribge)
+# library(ribge)
 library(dplyr)
 library(viridis)
 library(ggplot2)
@@ -293,8 +293,6 @@ criaBanco <- function(ano) {
   return(df_mun_pib)
 }
 
-
-
 ######################################################################
 # Hierarquia
 
@@ -460,3 +458,48 @@ leaf_meso <- function(df, year) {
   return(p)
 } 
 
+#### principal atividade economica
+
+leaf_ativ <- function(df, year) {
+  
+  df = df %>% filter(Year == year)
+  
+  pal <- colorFactor(palette = "RdYlBu", domain = df$`Atividade com maior valor adicionado bruto`)
+  
+  nome_dos_municipios = df$nome_munic
+  PIB_per_capita = df$PIB_per_capita
+  
+  p <- leaflet(data = df) %>%
+    addTiles() %>%
+    setView(lat = initial_lat, lng = initial_long, zoom = 7) %>%
+    addPolygons(
+      fillColor = ~pal(`Atividade com maior valor adicionado bruto`),
+      weight = 2,
+      opacity = 1,
+      color = 'white',
+      dashArray = '3',
+      fillOpacity = 0.7,
+      highlightOptions = highlightOptions(
+        weight = 5,
+        color = "#666",
+        dashArray = "",
+        fillOpacity = 0.7,
+        bringToFront = TRUE
+      ),
+      # Usar 'label' ao invés de 'popup'
+      label = ~paste0(nome_dos_municipios, ": ", `Atividade com maior valor adicionado bruto`),
+      labelOptions = labelOptions(
+        style = list("font-weight" = "normal", padding = "3px 8px"),
+        textsize = "15px",
+        direction = "auto"
+      )
+    ) %>%
+    addLegend(
+      pal = pal,
+      values = ~`Atividade com maior valor adicionado bruto`,
+      opacity = 0.7,
+      title = "Atividade Econômica",
+      position = "bottomright"
+    )
+  return(p)
+}

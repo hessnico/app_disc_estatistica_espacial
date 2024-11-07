@@ -1,5 +1,3 @@
-df_app <- df_populacao
-
 ui <- dashboardPage(
   dashboardHeader(title = "Shiny Estatística Espacial"),
   dashboardSidebar(
@@ -16,7 +14,13 @@ ui <- dashboardPage(
                   title = "Configurações", status = "primary", solidHeader = TRUE, width = 3,
                   selectInput("ano", "Selecione o Ano:", choices = 2010:2021, selected = 2010),
                   radioButtons("opcoes", "Escolha uma opção de gráfico:",
-                               choices = c("População", "PIB", "PIB per capita", "Mesorregião", "Hierarquia Urbana")),
+                               choices = c("População",
+                                           "PIB",
+                                           "PIB per capita",
+                                           "Mesorregião",
+                                           "Hierarquia Urbana",
+                                           "Principal atividade econômica")),
+                  
                   sliderInput("num_quantis", 
                               "Escolha o número de quantis para os gráficos:", 
                               min = 1, 
@@ -43,7 +47,8 @@ server <- function(input, output) {
              "PIB" = leaf_pib(df_app, num_quantis = input$num_quantis, input$ano),
              "PIB per capita" = leaf_pib_capita(df_app, num_quantis = input$num_quantis, input$ano),
              "Mesorregião" = leaf_meso(df_app, input$ano),
-             "Hierarquia Urbana" = createPlotByStateShiny_hierarquia(df = df_app, year = input$ano)
+             "Hierarquia Urbana" = createPlotByStateShiny_hierarquia(df = df_app, year = input$ano),
+             "Principal atividade econômica" = leaf_ativ(df = df_app, year = input$ano)
       )
     })
   })

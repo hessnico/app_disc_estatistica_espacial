@@ -1,0 +1,13 @@
+name: app_disc_estatistica_espacial
+title: app_disc_estatistica_espacial
+username: r8vnor-nicolas-hess
+account: r8vnor-nicolas-hess
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13258624
+bundleId: 9326205
+url: https://r8vnor-nicolas-hess.shinyapps.io/app_disc_estatistica_espacial/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|appDataRS.RData|config.R|dados.RData|downloaded/malha_RS.json|estimativa_2012_DOU_28_08_2012_xls.xls|estimativa_2013_dou_xls.xls|estimativas_dou_2014_xls.xls|figures/figure-1.PNG|POP-2002-DOU.xls|POP-2003-TCU.xls|POP-2005-DOU.xls|pop_estimativa_2001.zip|pop_estimativa_2002.zip|pop_estimativa_2003.zip|pop_estimativa_2004.zip|pop_estimativa_2005.zip|pop_estimativa_2006.zip|pop_estimativa_2011.zip|pop_estimativa_2012.zip|pop_estimativa_2013.zip|pop_estimativa_2014.zip|pop_estimativa_2015.xls|pop_estimativa_2016.xlsx|pop_estimativa_2017.xls|pop_estimativa_2018.xls|pop_estimativa_2019.xls|pop_estimativa_2020.xls|pop_estimativa_2021.xls|pop_estimativa_2022.xls|POP2004-TCU.xls|POP2006-TCU.xls|POP2011_DOU.xls|rconnect.R|README.html|README.md|UF_Municipio.xls
