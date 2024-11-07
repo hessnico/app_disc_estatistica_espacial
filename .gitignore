@@ -72,3 +72,6 @@ packrat/.cache/
 
 #### config password 
 config.R
+
+##
+*.dcf
