@@ -40,6 +40,7 @@ ui <- dashboardPage(
 
 server <- function(input, output) {
   
+  df_app <- readRDS(file = "bancodedados.rds")
   observeEvent(input$Acao, {
     output$leafletMap <- renderLeaflet({
       switch(input$opcoes,
